@@ -9,6 +9,16 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const generateRandomString = function() {
+  const p = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const startingArray = p.split("");
+  let finalArray = [];
+  for (let i = 0; i < 6; i++) {
+    finalArray.push(startingArray[Math.floor(Math.random() * 36)]);
+  }
+  return finalArray.join("");
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -31,10 +41,19 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  const templateVars = { shortURL: generateRandomString(), longURL: req.body.longURL};
+  //use the generated string as shotURL // set the longURL is what the user entered on the new page
+  const shortURL = templateVars.shortURL;
+  // give a name for it so is can be use
+  urlDatabase[shortURL] = templateVars.longURL; 
+  // adding the new data as object to database
+  res.redirect(`/urls/${shortURL}`);        
 });
 
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id]
+  res.redirect(longURL);
+});
 
 app.get("/urls/:id", (req, res) => {
 const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
