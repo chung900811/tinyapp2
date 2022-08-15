@@ -6,7 +6,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "9sm5xK": "http://www.google.com",
 };
 
 const generateRandomString = function() {
@@ -38,6 +38,15 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
+});
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL
+  //this is use to define the :shortURL. ,req.params come from the form action
+  //in the form ,the action="/urls/<%= id %>/delete" already give each button its own shourt url
+  delete urlDatabase[shortURL];
+  //delete the data which storing in the database so it will disappear
+  res.redirect("/urls");
 });
 
 app.post("/urls", (req, res) => {
