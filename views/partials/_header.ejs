@@ -20,18 +20,16 @@
       </div>
       <div>
 
-        <% if (username) { %>
-
+        <% if (user_id) { %>
           <form class="form-inline" action="/logout" method="POST">
-            <label style="color: white; font-size:large;";>Login In As: <%= username %> &nbsp</label> 
+            <label style="color: white; font-size:large;";>Login In As: <%= user_id.email %> &nbsp</label> 
             <div class="form-group mb-2"></div>
               <button type="submit" class="btn btn-primary">Logout</button>
             </div>
           </form>
           <% } else { %>
-              <form action="/login" method="POST">
-                <input type="text" name="username" style="width: 300px; height: 35px; margin: 0em"/>
-                <button type="submit" class="btn btn-primary">Submit</button></form>
+            <a href="login"><button type="submit" class="btn btn-primary" >Login</button></a>
+            <a href="register"><button type="submit" class="btn btn-primary" >Register</button></a>
         <% } %>
       </div>
     </nav>
