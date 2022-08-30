@@ -2,13 +2,15 @@ const express = require("express");
 let cookieParser = require('cookie-parser');
 const app = express();
 app.use(cookieParser());
-const PORT = 8080; 
+const PORT = 8080;
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 const findEmail = require("./helpers.js");
+//library to help hash passwords
 const bcrypt = require("bcryptjs");
-const password = "purple-monkey-dinosaur"; 
+const password = "purple-monkey-dinosaur";
 const hashedPassword = bcrypt.hashSync(password, 10);
+// stores the session data on the client within a cookie
 const cookieSession = require('cookie-session');
 
 app.use(cookieSession({
@@ -17,6 +19,7 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000
 }));
 
+// url database of ALL urls
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -28,6 +31,7 @@ const urlDatabase = {
   },
 };
 
+// user database of ALL users
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -41,6 +45,7 @@ const users = {
   },
 };
 
+// genereates random strings
 const generateRandomString = function() {
   const p = "abcdefghijklmnopqrstuvwxyz0123456789";
   const startingArray = p.split("");
@@ -51,6 +56,7 @@ const generateRandomString = function() {
   return finalArray.join("");
 };
 
+//filtered URL database
 const filterDatebase = function(id) {
   let newDatabase = {};
   const shortKeys = Object.keys(urlDatabase);
@@ -74,19 +80,18 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+//renders URLs page with list of all the URLs currently in the database
 app.get("/urls", (req, res) => {
-
   if (req.session.userid === undefined) {
-
     res.redirect("/login");
   } else {
-
     const userDatabase = filterDatebase(req.session.userid.id);
     const templateVars = { urls: userDatabase, user_id:req.session.userid, email:req.session.userid};
     res.render("urls_index", templateVars);
   }
 });
 
+//renders new URL page
 app.get("/new", (req, res) => {
   if (req.session.userid) {
     const templateVars = { user_id:req.session.userid, email:req.session.userid };
@@ -105,6 +110,7 @@ app.get("/login", (req, res) => {
   }
 });
 
+//renders register page (unless user is already logged in)
 app.get("/register", (req, res) => {
   if (req.session.userid) {
     res.redirect("/urls");
@@ -121,6 +127,7 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect("/urls");
 });
 
+// Adds user to database with hashed password, creates encrypted cookie (login), then redirects to /urls
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = bcrypt.hashSync(req.body.password, 10);
@@ -142,7 +149,7 @@ app.post("/register", (req, res) => {
   }
 });
 
-
+//DELETE URL: removes a URL resource and redirects back to URLs page
 app.post("/urls/:shortURL/delete", (req, res) => {
   const templateVars = { user_id: req.session.userid };
   const shortURL = req.params.shortURL;
@@ -152,8 +159,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
+// Logs in user by creating encrypted cookie, then redirects to /urls
 app.post("/login", (req, res) => {
-
   const email = req.body.email;
   const password = req.body.password;
   const findUser = findEmail(email,users);
@@ -174,8 +181,8 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
+//generates a new shortURL, adds it to the database, and redirects to the "show" page
 app.post("/urls", (req, res) => {
-
   const templateVars = { shortURL: generateRandomString(), longURL: req.body.longURL, userID: req.session.userid};
   const shortURL = templateVars.shortURL;
   urlDatabase[shortURL] = { longURL: templateVars.longURL, userID: templateVars.userID.id};
@@ -183,23 +190,28 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+//redirects to the actual page when user clicks on short url link
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
 
+// if URL for the given ID does not exist: returns HTML with a relevant error message
 app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return res.status(401).send("The URL that you are trying to access does not exist");
+  } else if (!req.session.userid) {
+    return res.status(401).send("You cannot access this page as you are not logged in");
+  } else if (req.session.userid.id !== urlDatabase[req.params.id].userID) {
+    return res.status(403).send("You cannot acesss a URL that is not yours");
+  }
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id].longURL,
     user_id:req.session.userid,
     email:req.session.userid
   };
-  if (templateVars.user_id !== undefined && templateVars.user_id.id === urlDatabase[req.params.id].userID) {
-    res.render("urls_show",templateVars);
-  } else {
-    res.redirect("/login");
-  }
+  res.render("urls_show", templateVars);
 });
 
 app.get("/:shortURL", (req, res) => {
