@@ -15,7 +15,7 @@
       <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
           <a class="nav-item nav-link" href="/urls">My URLs</a>
-          <a class="nav-item nav-link" href="/new">Create New URL</a>
+          <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
         </div>
       </div>
       <div>
@@ -28,8 +28,12 @@
             </div>
           </form>
           <% } else { %>
-            <a href="login"><button type="submit" class="btn btn-primary" >Login</button></a>
-            <a href="register"><button type="submit" class="btn btn-primary" >Register</button></a>
+      <form  action="/register" method="GET" style="margin-right: 0.5em;">
+        <button class="btn btn-primary" type="submit">Register</button>
+      </form>
+      <form  action="/login" method="GET">
+        <button class="btn btn-primary" type="submit">Login</button>
+      </form>
         <% } %>
       </div>
     </nav>
